@@ -1,0 +1,44 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, f1_score
+import random
+
+positive_rev = [
+    "the ramen was pretty good", "i liked the broth", "tastes nice overall",
+    "not bad at all", "enjoyed the noodles", "decent flavor", "satisfying soup",
+    "would eat again", "it was okay, good spice", "texture was alright"
+]
+
+negative_rev = [
+   "the ramen was pretty bad", "i disliked the broth", "tastes weird overall",
+    "not good at all", "noodles too chewy", "bland flavor", "unsatisfying soup",
+    "wouldn’t eat again", "it was okay, too salty", "texture was off"
+]
+
+positive_reviews = [random.choice(positive_rev) + f" #{i}" for i in range(1, 51)]
+negative_reviews = [random.choice(negative_rev) + f" #{i}" for i in range(1, 51)]
+
+texts = positive_reviews + negative_reviews
+labels = ['good'] * 50 + ['bad'] * 50
+
+df = pd.DataFrame({'Review': texts, 'Label': labels})
+
+vectorizer = TfidfVectorizer(max_features=300, lowercase=True, stop_words='english')
+X = vectorizer.fit_transform(df['Review'])
+y = np.array(df['Label'])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+print("Precision:", precision_score(y_test, y_pred, pos_label='good'))
+print("Recall:", recall_score(y_test, y_pred, pos_label='good'))
+print("F1-Score:", f1_score(y_test, y_pred, pos_label='good'))
+
+def text_preprocess_vectorize(texts, vectorizer):
+    return vectorizer.transform(texts)
